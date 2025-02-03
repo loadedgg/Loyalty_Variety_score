@@ -1,0 +1,1 @@
+# Loyalty_Variety_score
