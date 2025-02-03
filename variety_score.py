@@ -17,6 +17,7 @@ def df_1():
     JOIN channels c ON c.twitch_channel_id = sp.twitch_channel_id
     JOIN games g ON g.twitch_game_id = sp.twitch_game_id
     WHERE sp.pulled_at >= CURRENT_DATE - INTERVAL '90 days'
+    and c.name in ('matarakan','barbarousking','therussianbadger','sheriffeli','matimi0')
     GROUP BY sp.twitch_channel_id, sp.twitch_game_id, c.name, g.title
     """
 
@@ -46,8 +47,8 @@ def df_1():
 
 def df_4(df_1):
     # Step : Load genres data from CSV
-    genres = pd.read_csv("/app/game_genres.csv")  # File with columns: Game, Primary Genre
-    
+    # genres = pd.read_csv("/app/game_genres.csv")  # File with columns: Game, Primary Genre
+    genres = pd.read_csv("game_genres.csv")
     genre_playtime = pd.merge(df_1, genres, how='left', left_on='title', right_on='Game')
 
     genre_playtime = genre_playtime[genre_playtime['Primary Genre'].notnull()]
@@ -155,5 +156,5 @@ def df_f_fun(df_f):
         'game_rank_6', 'game_rank_7', 'game_rank_8', 'game_rank_9', 'game_rank_10'
     ]
 
-    return df_5
+    return df_f[selected_columns]
     

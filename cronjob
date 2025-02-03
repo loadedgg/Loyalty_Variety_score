@@ -3,7 +3,8 @@ PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 PYTHONPATH=/usr/lib/python3.9/site-packages
 
 # Schedule job to run every 14 days at midnight
-# 0 0 */14 * * 
+# 0 0 */14 * * /usr/local/bin/python3 /app/main.py >> /var/log/cron.log 2>&1
+
 # Run the Python script every 5 minutes
-*/5 * * * * /usr/local/bin/python3 /app/main.py >> /var/log/cron.log 2>&1
+# */5 * * * * /usr/local/bin/python3 /app/main.py >> /var/log/cron.log 2>&1
 

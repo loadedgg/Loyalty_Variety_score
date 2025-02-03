@@ -63,10 +63,6 @@ def process_final_data(loyalty, variety):
     ]
 
     loyalty_variety_scores = final_df[selected_columns]
-    output_file = "loyalty_variety_scores.csv"  
-    loyalty_variety_scores.to_csv(output_file, index=False)
-    logging.info(f"DataFrame saved to {output_file}")
-
     return loyalty_variety_scores
 
 def create_redshift_connection():
@@ -112,14 +108,14 @@ if __name__ == "__main__":
     try:
         start_time = time.time()
 
-        loyalty,variety = function_call()
+        loyalty, variety = function_call()
         final_data = process_final_data(loyalty, variety)
 
         conn = create_redshift_connection()
         insert_data_to_redshift(conn, final_data)
 
         end_time = time.time()
-        str(elapsed_time_minutes) = (end_time - start_time) / 60
+        elapsed_time_minutes = (end_time - start_time) / 60
         logging.info(f"The script ran for {elapsed_time_minutes:.2f} minutes.")
         success_message = (
             f"\U00002705 Success! \n\n"
