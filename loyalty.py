@@ -61,7 +61,6 @@ def df_2():
         LEFT JOIN games ON games.twitch_game_id = a.twitch_game_id
         LEFT JOIN channels ON channels.twitch_channel_id = a.twitch_channel_id 
         WHERE a.pulled_at >= CURRENT_DATE - INTERVAL '90 days'
-        and channels.name in ('matarakan','barbarousking','therussianbadger','sheriffeli','matimi0')
         GROUP BY a.twitch_channel_id, a.twitch_game_id, games.title, channels.name, channels.language
     """)
 
@@ -128,7 +127,6 @@ def fetch_df_6(start_date, end_date):
         JOIN channels ON channels.twitch_channel_id = stream_peeks.twitch_channel_id
         JOIN games ON games.twitch_game_id = stream_peeks.twitch_game_id
         WHERE stream_peeks.pulled_at BETWEEN '{end_date} 00:00:00' AND '{start_date} 23:59:59'
-        and channels.name in ('matarakan','barbarousking','therussianbadger','sheriffeli','matimi0')
         ORDER BY channels.name;
     """)
 
