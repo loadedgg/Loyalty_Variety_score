@@ -1,4 +1,5 @@
 import os
+import gc
 import time
 import json
 import logging
@@ -12,7 +13,7 @@ from datetime import datetime, timedelta
 from psycopg2.extras import execute_values
 from sqlalchemy import create_engine, text
 from variety_score import df_1, df_5
-from loyalty import df_2, process_df_6, calculate_loyalty_score
+from loyalty import df_2, process_df_6, calculate_loyalty_score, db_connection
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -31,12 +32,17 @@ def function_call():
 
     # Loyalty score
     df_2_result = df_2()
+    gc.collect()     # Trigger garbage collection to clean up any unused memory
     df_6_result = process_df_6(df_2_result)
+    gc.collect()    # Trigger garbage collection to clean up any unused memory
     loyalty = calculate_loyalty_score(df_6_result)
+    gc.collect()    # Trigger garbage collection to clean up any unused memory
 
     # Variety score
     df_4_result = df_1()
+    gc.collect()    # Trigger garbage collection to clean up any unused memory
     variety = df_5(df_2_result, df_4_result)
+    gc.collect()    # Trigger garbage collection to clean up any unused memory
 
     return loyalty, variety
 
@@ -62,8 +68,7 @@ def process_final_data(loyalty, variety):
         'final_loyalty_score', 'variety_cat', 'loyalty_category'
     ]
 
-    loyalty_variety_scores = final_df[selected_columns]
-    return loyalty_variety_scores
+    return final_df[selected_columns]
 
 def create_redshift_connection():
     load_dotenv()
@@ -78,13 +83,25 @@ def create_redshift_connection():
 
     return conn
 
-# Function to insert DataFrame into Redshift
-def insert_data_to_redshift(conn, df):
-    if conn is None:
-        logging.error(f"No active Redshift connection!")
-        return
+def insert_to_twitch(df):
+    """Truncate table and insert DataFrame into PostgreSQL table."""
+    engine, tunnel = db_connection()
+    table_name = 'loyalty_variety_scores'
 
-    truncate_query = "TRUNCATE TABLE loyalty_variety_scores;"  # Truncate the table before insertion
+    # Truncate the table before inserting new data
+    with engine.connect() as connection:
+        connection.execute(text(f"TRUNCATE TABLE {table_name};"))
+        connection.commit()
+    logging.info(f"Table {table_name} truncated successfully from Twitch.")
+
+    # Insert DataFrame into the table
+    df.to_sql(table_name, con=engine, if_exists='append', index=False)
+    logging.info(f"Data inserted successfully into {table_name} table in Twitch.")
+    tunnel.stop()
+
+# Function to insert DataFrame into Redshift
+def insert_data_to_redshift(df):
+    conn = create_redshift_connection()
 
     insert_query = """
     INSERT INTO loyalty_variety_scores ( twitch_channel_id, name, lang, acv, pct_shooter_airtime, genre_rank_1, 
@@ -97,12 +114,13 @@ def insert_data_to_redshift(conn, df):
     data_tuples = [tuple(row) for row in df.itertuples(index=False, name=None)]
 
     with conn.cursor() as cursor:
-        cursor.execute(truncate_query)
+        cursor.execute("TRUNCATE TABLE loyalty_variety_scores;")
         conn.commit()
         logging.info(f"The table was truncated from Redshift before loading the data!")
         execute_values(cursor, insert_query, data_tuples)
         conn.commit()
         logging.info(f"Inserted {len(df)} rows into Redshift!")
+    conn.close()
 
 if __name__ == "__main__":
     try:
@@ -111,8 +129,8 @@ if __name__ == "__main__":
         loyalty, variety = function_call()
         final_data = process_final_data(loyalty, variety)
 
-        conn = create_redshift_connection()
-        insert_data_to_redshift(conn, final_data)
+        insert_data_to_redshift(final_data)
+        insert_to_twitch(final_data)
 
         end_time = time.time()
         elapsed_time_minutes = (end_time - start_time) / 60
@@ -133,7 +151,3 @@ if __name__ == "__main__":
         )
         send_slack_message(failure_message)
         logging.error("Error:", e)
-
-    finally:
-        if conn:
-            conn.close()
