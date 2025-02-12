@@ -96,6 +96,9 @@ def df_4(df_1):
         variety_game_score=('game_percentage_played_sq', 'sum')
     )
 
+    # Inverting variety_game_score to ensure higher scores indicate more variety
+    game_variety_scores['variety_game_score'] = 1 - game_variety_scores['variety_game_score']
+
     final_result = pd.merge(variety_scores, game_variety_scores, on='name', how='left')
     final_result = pd.merge(final_result, genre_rank_schema, on='name', how='left')
     final_result = pd.merge(final_result, game_rank_schema, on='name', how='left')

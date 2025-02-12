@@ -198,6 +198,9 @@ def calculate_loyalty_score(df_removed_outliers):
     final_group['final_loyalty_score'] = (final_group['score'] - 3.119576806) / 1.62
     final_group = final_group.dropna(subset=['final_loyalty_score'])
 
+    # Inverting final_loyalty_score to ensure higher scores indicate more loyalty
+    final_group['final_loyalty_score'] = 1 - final_group['final_loyalty_score']
+    
     unique_scores = final_group['final_loyalty_score'].nunique()
 
     if unique_scores >= 3:
