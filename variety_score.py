@@ -48,7 +48,7 @@ def df_4(df_1):
     
     # Step : Load genres data from CSV
     # genres = pd.read_csv("/app/game_genres.csv")  # File with columns: Game, Primary Genre
-    genres = pd.read_csv("game_genres.csv")
+    genres = pd.read_csv("/home/ec2-user/Loyalty_Variety_score/game_genres.csv")
     genre_playtime = pd.merge(df_1, genres, how='left', left_on='title', right_on='Game')
 
     genre_playtime = genre_playtime[genre_playtime['Primary Genre'].notnull()]
