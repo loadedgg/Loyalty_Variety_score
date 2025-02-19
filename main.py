@@ -58,7 +58,9 @@ def process_final_data(loyalty, variety):
         (final_df['variety_game_score'] > 0.25) & (final_df['variety_game_score'] <= 0.5),
         (final_df['variety_game_score'] <= 0.25)
     ]
-    choices = ['One Category', 'Mostly One Category', 'Moderate Variety', 'Very Variety']
+
+    # Correct 'variety_cat' classification by flipping the conditions
+    choices = [ 'Very Variety', 'Moderate Variety', 'Mostly One Category', 'One Category']
     final_df['variety_cat'] = np.select(conditions, choices, default='Unknown')
 
     # Selecting required columns from final_df
