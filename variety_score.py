@@ -1,6 +1,5 @@
 import pandas as pd
 from sqlalchemy import create_engine, text
-from sshtunnel import SSHTunnelForwarder
 from datetime import datetime, timedelta
 import numpy as np
 from loyalty import execute_query

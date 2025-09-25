@@ -8,7 +8,6 @@ import requests
 import numpy as np
 import pandas as pd
 from dotenv import load_dotenv
-from sshtunnel import SSHTunnelForwarder
 from datetime import datetime, timedelta
 from psycopg2.extras import execute_values
 from sqlalchemy import create_engine, text
@@ -87,7 +86,7 @@ def create_redshift_connection():
 
 def insert_to_twitch(df):
     """Truncate table and insert DataFrame into PostgreSQL table."""
-    engine, tunnel = db_connection()
+    engine = db_connection()
     table_name = 'loyalty_variety_scores'
 
     # Truncate the table before inserting new data
@@ -99,7 +98,6 @@ def insert_to_twitch(df):
     # Insert DataFrame into the table
     df.to_sql(table_name, con=engine, if_exists='append', index=False)
     logging.info(f"Data inserted successfully into {table_name} table in Twitch.")
-    tunnel.stop()
 
 # Function to insert DataFrame into Redshift
 def insert_data_to_redshift(df):

@@ -2,43 +2,26 @@ import os
 import pandas as pd
 from dotenv import load_dotenv
 from sqlalchemy import create_engine, text
-from sshtunnel import SSHTunnelForwarder
 from datetime import datetime, timedelta
 import numpy as np
 
 def db_connection():
-    """Establish SSH tunnel & database connection."""
     load_dotenv()
 
-    ssh_host = os.getenv("ssh_host")
-    ssh_port = int(os.getenv("ssh_port"))
-    ssh_username = os.getenv("ssh_username")
-    ssh_private_key_path = os.getenv("ssh_private_key_path")
+    db_host = os.getenv("twitch_DB_HOST")
+    db_port = int(os.getenv("twitch_DB_PORT"))
+    db_user = os.getenv("twitch_DB_USER")
+    db_password = os.getenv("twitch_DB_PASSWORD")
+    db_name = os.getenv("twitch_DB_NAME")
 
-    db_host = os.getenv("prod_host")
-    db_port = int(os.getenv("prod_port"))
-    db_user = os.getenv("prod_user")
-    db_password = os.getenv("prod_password")
-    db_name = os.getenv("prod_db_name")
-
-    tunnel = SSHTunnelForwarder(
-        (ssh_host, ssh_port),
-        ssh_username=ssh_username,
-        ssh_pkey=ssh_private_key_path,
-        remote_bind_address=(db_host, db_port)
-    )
-    
-    tunnel.start()
-    print(f"Tunnel established at localhost:{tunnel.local_bind_port}")
-
-    db_url = f'postgresql://{db_user}:{db_password}@{tunnel.local_bind_host}:{tunnel.local_bind_port}/{db_name}'
+    db_url = f'postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}'
     engine = create_engine(db_url, echo=False)
-    
-    return engine, tunnel
+
+    return engine
 
 def execute_query(query):
     """Execute a SQL query and return a Pandas DataFrame."""
-    engine, tunnel = db_connection()
+    engine = db_connection()
 
     try:
         with engine.connect() as connection:
@@ -46,7 +29,6 @@ def execute_query(query):
             return result
     finally:
         engine.dispose()
-        tunnel.stop()
         print("Database connection closed.")
 
 def df_2():
